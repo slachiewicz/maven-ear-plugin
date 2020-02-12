@@ -37,7 +37,7 @@ under the License.
     <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-api</artifactId>
-      <version>6.0</version>
+      <version>8.0.1</version>
     </dependency>
   </dependencies>
 </project>
