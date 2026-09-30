@@ -26,8 +26,6 @@ import java.util.Map;
 import org.apache.maven.plugins.ear.EarModuleFactory;
 import org.apache.maven.plugins.ear.EarPluginException;
 import org.apache.maven.plugins.ear.UnknownArtifactTypeException;
-import org.codehaus.plexus.configuration.PlexusConfiguration;
-import org.codehaus.plexus.configuration.PlexusConfigurationException;
 
 /**
  * Allows to map custom artifact type to standard type.
@@ -57,22 +55,19 @@ public class ArtifactTypeMappingService {
     }
 
     /**
-     * @param plexusConfiguration {@link PlexusConfiguration}
+     * @param configuration the {@code artifactTypeMappings} configuration, can be {@code null}
      * @throws EarPluginException {@link EarPluginException}
-     * @throws PlexusConfigurationException {@link PlexusConfigurationException}
      */
-    public void configure(final PlexusConfiguration plexusConfiguration)
-            throws EarPluginException, PlexusConfigurationException {
+    public void configure(final XmlConfig configuration) throws EarPluginException {
 
         // No user defined configuration
-        if (plexusConfiguration == null) {
+        if (configuration == null) {
             return;
         }
 
         // Inject users configuration
-        final PlexusConfiguration[] artifactTypeMappings =
-                plexusConfiguration.getChildren(ARTIFACT_TYPE_MAPPING_ELEMENT);
-        for (PlexusConfiguration artifactTypeMapping : artifactTypeMappings) {
+        final XmlConfig[] artifactTypeMappings = configuration.getChildren(ARTIFACT_TYPE_MAPPING_ELEMENT);
+        for (XmlConfig artifactTypeMapping : artifactTypeMappings) {
             final String customType = artifactTypeMapping.getAttribute(TYPE_ATTRIBUTE);
             final String mapping = artifactTypeMapping.getAttribute(MAPPING_ATTRIBUTE);
 

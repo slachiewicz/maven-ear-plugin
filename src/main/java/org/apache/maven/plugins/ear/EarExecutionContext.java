@@ -18,9 +18,11 @@
  */
 package org.apache.maven.plugins.ear;
 
+import java.util.Set;
+
 import org.apache.maven.plugins.ear.util.ArtifactRepository;
 import org.apache.maven.plugins.ear.util.ArtifactTypeMappingService;
-import org.apache.maven.project.MavenProject;
+import org.apache.maven.plugins.ear.util.ResolvedArtifact;
 
 /**
  * Contains various runtime parameters used to customize the generated EAR file.
@@ -37,7 +39,7 @@ public class EarExecutionContext {
     private ArtifactRepository artifactRepository;
 
     /**
-     * @param project {@link MavenProject}
+     * @param artifacts the resolved project dependencies
      * @param mainArtifactId the artifactId
      * @param defaultLibBundleDir the defaultLibBundleDir
      * @param jbossConfiguration {@link JbossConfiguration}
@@ -45,14 +47,14 @@ public class EarExecutionContext {
      * @param typeMappingService {@link ArtifactTypeMappingService}
      */
     public EarExecutionContext(
-            MavenProject project,
+            Set<ResolvedArtifact> artifacts,
             String mainArtifactId,
             String defaultLibBundleDir,
             JbossConfiguration jbossConfiguration,
             String fileNameMappingName,
             ArtifactTypeMappingService typeMappingService) {
         initialize(
-                project,
+                artifacts,
                 mainArtifactId,
                 defaultLibBundleDir,
                 jbossConfiguration,
@@ -89,13 +91,13 @@ public class EarExecutionContext {
     }
 
     private void initialize(
-            MavenProject project,
+            Set<ResolvedArtifact> artifacts,
             String mainArtifactId,
             String defaultLibBundleDir,
             JbossConfiguration jbossConfiguration,
             String outputFileNameMapping,
             ArtifactTypeMappingService typeMappingService) {
-        this.artifactRepository = new ArtifactRepository(project.getArtifacts(), mainArtifactId, typeMappingService);
+        this.artifactRepository = new ArtifactRepository(artifacts, mainArtifactId, typeMappingService);
         this.defaultLibBundleDir = defaultLibBundleDir;
         this.jbossConfiguration = jbossConfiguration;
         this.outputFileNameMapping = outputFileNameMapping;

@@ -18,7 +18,7 @@
  */
 package org.apache.maven.plugins.ear;
 
-import org.apache.maven.artifact.Artifact;
+import org.apache.maven.plugins.ear.util.ResolvedArtifact;
 import org.codehaus.plexus.util.xml.XMLWriter;
 
 /**
@@ -44,7 +44,7 @@ public class EjbModule extends AbstractEarModule {
     /**
      * @param a {@link Artifact}
      */
-    public EjbModule(Artifact a) {
+    public EjbModule(ResolvedArtifact a) {
         super(a);
     }
 

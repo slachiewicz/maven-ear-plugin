@@ -18,11 +18,14 @@
  */
 package org.apache.maven.plugins.ear.util;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.maven.api.xml.XmlNode;
 import org.apache.maven.plugins.ear.EarModuleFactory;
 import org.apache.maven.plugins.ear.EarPluginException;
 import org.apache.maven.plugins.ear.UnknownArtifactTypeException;
-import org.codehaus.plexus.configuration.PlexusConfigurationException;
-import org.codehaus.plexus.configuration.xml.XmlPlexusConfiguration;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -81,108 +84,89 @@ class ArtifactTypeMappingServiceTest {
     @Test
     void testConfigWithSameCustomType() {
         try {
-            XmlPlexusConfiguration rootConfig = new XmlPlexusConfiguration("dummy");
-            XmlPlexusConfiguration childConfig =
-                    new XmlPlexusConfiguration(ArtifactTypeMappingService.ARTIFACT_TYPE_MAPPING_ELEMENT);
-            childConfig.setAttribute("type", "generic");
-            childConfig.setAttribute("mapping", "rar");
-            XmlPlexusConfiguration childConfig2 =
-                    new XmlPlexusConfiguration(ArtifactTypeMappingService.ARTIFACT_TYPE_MAPPING_ELEMENT);
-            childConfig.setAttribute("type", "generic");
-            childConfig.setAttribute("mapping", "ejb");
-
-            rootConfig.addChild(childConfig);
-            rootConfig.addChild(childConfig2);
+            // the second mapping is left without attributes, as it always was
+            XmlNode rootConfig = root("dummy", mapping("generic", "rar"), mapping(null, null));
             ArtifactTypeMappingService service = new ArtifactTypeMappingService();
-            service.configure(rootConfig);
+            service.configure(XmlConfig.of(rootConfig));
             fail("Should have failed");
         } catch (EarPluginException e) {
             // OK
-        } catch (PlexusConfigurationException e) {
-            e.printStackTrace();
-            fail("Unexpected " + e.getMessage());
+        }
+    }
+
+    @Test
+    void testConfigWithSameCustomTypeRegisteredTwice() {
+        try {
+            XmlNode rootConfig = root("dummy", mapping("generic", "rar"), mapping("generic", "ejb"));
+            ArtifactTypeMappingService service = new ArtifactTypeMappingService();
+            service.configure(XmlConfig.of(rootConfig));
+            fail("Should have failed");
+        } catch (EarPluginException e) {
+            // OK
         }
     }
 
     @Test
     void testConfigWithUnknownStandardType() {
         try {
-            XmlPlexusConfiguration rootConfig = new XmlPlexusConfiguration("dummy");
-            XmlPlexusConfiguration childConfig =
-                    new XmlPlexusConfiguration(ArtifactTypeMappingService.ARTIFACT_TYPE_MAPPING_ELEMENT);
-            childConfig.setAttribute("type", "generic");
-            childConfig.setAttribute("mapping", "notAStandardType");
-
-            rootConfig.addChild(childConfig);
+            XmlNode rootConfig = root("dummy", mapping("generic", "notAStandardType"));
             ArtifactTypeMappingService service = new ArtifactTypeMappingService();
-            service.configure(rootConfig);
+            service.configure(XmlConfig.of(rootConfig));
             fail("Should have failed");
         } catch (EarPluginException e) {
             // OK
-        } catch (PlexusConfigurationException e) {
-            e.printStackTrace();
-            fail("Unexpected " + e.getMessage());
         }
     }
 
     @Test
     void testConfigWithNoType() {
         try {
-            XmlPlexusConfiguration rootConfig = new XmlPlexusConfiguration("dummy");
-            XmlPlexusConfiguration childConfig =
-                    new XmlPlexusConfiguration(ArtifactTypeMappingService.ARTIFACT_TYPE_MAPPING_ELEMENT);
-            childConfig.setAttribute("mapping", "ejb");
-
-            rootConfig.addChild(childConfig);
+            XmlNode rootConfig = root("dummy", mapping(null, "ejb"));
             ArtifactTypeMappingService service = new ArtifactTypeMappingService();
-            service.configure(rootConfig);
+            service.configure(XmlConfig.of(rootConfig));
             fail("Should have failed");
         } catch (EarPluginException e) {
             // OK
-        } catch (PlexusConfigurationException e) {
-            e.printStackTrace();
-            fail("Unexpected " + e.getMessage());
         }
     }
 
     @Test
     void testConfigWithNoMapping() {
         try {
-            XmlPlexusConfiguration rootConfig = new XmlPlexusConfiguration("dummy");
-            XmlPlexusConfiguration childConfig =
-                    new XmlPlexusConfiguration(ArtifactTypeMappingService.ARTIFACT_TYPE_MAPPING_ELEMENT);
-            childConfig.setAttribute("type", "generic");
-
-            rootConfig.addChild(childConfig);
+            XmlNode rootConfig = root("dummy", mapping("generic", null));
             ArtifactTypeMappingService service = new ArtifactTypeMappingService();
-            service.configure(rootConfig);
+            service.configure(XmlConfig.of(rootConfig));
             fail("Should have failed");
         } catch (EarPluginException e) {
             // OK
-        } catch (PlexusConfigurationException e) {
-            e.printStackTrace();
-            fail("Unexpected " + e.getMessage());
         }
     }
 
     // Utilities
 
+    private static XmlNode root(String name, XmlNode... children) {
+        return XmlNode.newInstance(name, List.of(children));
+    }
+
+    private static XmlNode mapping(String type, String mapping) {
+        Map<String, String> attributes = new HashMap<>();
+        if (type != null) {
+            attributes.put("type", type);
+        }
+        if (mapping != null) {
+            attributes.put("mapping", mapping);
+        }
+        return XmlNode.newInstance(
+                ArtifactTypeMappingService.ARTIFACT_TYPE_MAPPING_ELEMENT, null, attributes, null, null);
+    }
+
     protected ArtifactTypeMappingService getServiceWithRarMappingToMyRar() {
         try {
-            XmlPlexusConfiguration rootConfig = new XmlPlexusConfiguration("artifact-type-mappings");
-            XmlPlexusConfiguration childConfig =
-                    new XmlPlexusConfiguration(ArtifactTypeMappingService.ARTIFACT_TYPE_MAPPING_ELEMENT);
-            childConfig.setAttribute("type", "MyRar");
-            childConfig.setAttribute("mapping", "rar");
-            rootConfig.addChild(childConfig);
             ArtifactTypeMappingService service = new ArtifactTypeMappingService();
-            service.configure(rootConfig);
+            service.configure(XmlConfig.of(root("artifact-type-mappings", mapping("MyRar", "rar"))));
 
             return service;
         } catch (EarPluginException e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        } catch (PlexusConfigurationException e) {
             e.printStackTrace();
             fail(e.getMessage());
         }
@@ -193,13 +177,10 @@ class ArtifactTypeMappingServiceTest {
     protected ArtifactTypeMappingService getDefaultService() {
         try {
             ArtifactTypeMappingService service = new ArtifactTypeMappingService();
-            service.configure(new XmlPlexusConfiguration("dummy"));
+            service.configure(XmlConfig.of(root("dummy")));
 
             return service;
         } catch (EarPluginException e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        } catch (PlexusConfigurationException e) {
             e.printStackTrace();
             fail(e.getMessage());
         }

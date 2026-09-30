@@ -20,8 +20,7 @@ package org.apache.maven.plugins.ear;
 
 import java.util.Set;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.ear.util.ResolvedArtifact;
 import org.codehaus.plexus.util.xml.XMLWriter;
 
 /**
@@ -56,7 +55,7 @@ public class WebModule extends AbstractEarModule {
     /**
      * @param a {@link Artifact}
      */
-    public WebModule(Artifact a) {
+    public WebModule(ResolvedArtifact a) {
         super(a);
         this.contextRoot = getDefaultContextRoot(a);
         this.libDirectory = DEFAULT_LIB_DIRECTORY;
@@ -86,7 +85,7 @@ public class WebModule extends AbstractEarModule {
     /**
      * {@inheritDoc}
      */
-    public void resolveArtifact(Set<Artifact> artifacts) throws EarPluginException, MojoFailureException {
+    public void resolveArtifact(Set<ResolvedArtifact> artifacts) throws EarPluginException {
         // Let's resolve the artifact
         super.resolveArtifact(artifacts);
 
@@ -113,7 +112,7 @@ public class WebModule extends AbstractEarModule {
      * @param a the artifact
      * @return a context root for the artifact
      */
-    private static String getDefaultContextRoot(Artifact a) {
+    private static String getDefaultContextRoot(ResolvedArtifact a) {
         if (a == null) {
             throw new NullPointerException("Artifact could not be null.");
         }

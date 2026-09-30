@@ -18,13 +18,14 @@
  */
 package org.apache.maven.plugins.ear;
 
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.DefaultArtifact;
-import org.apache.maven.plugins.ear.stub.ArtifactHandlerTestStub;
+import org.apache.maven.api.DependencyScope;
+import org.apache.maven.plugins.ear.stub.DependencyStub;
+import org.apache.maven.plugins.ear.util.ResolvedArtifact;
 
 /**
  * @author <a href="snicoll@apache.org">Stephane Nicoll</a>
@@ -39,31 +40,32 @@ public abstract class AbstractEarTestBase {
         ((AbstractEarModule) module).setUri(uri);
     }
 
-    protected Set<Artifact> createArtifacts(String[] artifactIds) {
+    protected Set<ResolvedArtifact> createArtifacts(String[] artifactIds) {
         return createArtifacts(artifactIds, null);
     }
 
-    protected Set<Artifact> createArtifacts(String[] artifactIds, String[] classifiers) {
-        Set<Artifact> result = new TreeSet<>();
-        ArtifactHandlerTestStub artifactHandler = new ArtifactHandlerTestStub("jar");
+    protected Set<ResolvedArtifact> createArtifacts(String[] artifactIds, String[] classifiers) {
+        Set<ResolvedArtifact> result = new TreeSet<>();
         for (int i = 0; i < artifactIds.length; i++) {
             String artifactId = artifactIds[i];
             String classifier = classifiers == null ? null : classifiers[i];
-            Artifact artifactTestStub = new DefaultArtifact(
-                    DEFAULT_GROUPID, artifactId, "1.0", "compile", DEFAULT_TYPE, classifier, artifactHandler);
-            result.add(artifactTestStub);
+            result.add(new ResolvedArtifact(
+                    new DependencyStub(
+                            DEFAULT_GROUPID, artifactId, "1.0", classifier, DEFAULT_TYPE, DependencyScope.COMPILE),
+                    Path.of(artifactId + "-1.0.jar")));
         }
         return result;
     }
 
-    protected Artifact createArtifact(String artifactId, String type) {
-        return new DefaultArtifact(
-                DEFAULT_GROUPID,
-                artifactId,
-                "1.0",
-                "compile",
-                Objects.toString(type, DEFAULT_TYPE),
-                null,
-                new ArtifactHandlerTestStub("jar"));
+    protected ResolvedArtifact createArtifact(String artifactId, String type) {
+        return new ResolvedArtifact(
+                new DependencyStub(
+                        DEFAULT_GROUPID,
+                        artifactId,
+                        "1.0",
+                        null,
+                        Objects.toString(type, DEFAULT_TYPE),
+                        DependencyScope.COMPILE),
+                Path.of(artifactId + "-1.0.jar"));
     }
 }

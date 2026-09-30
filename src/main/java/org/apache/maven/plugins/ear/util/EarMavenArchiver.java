@@ -21,12 +21,12 @@ package org.apache.maven.plugins.ear.util;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.maven.archiver.MavenArchiveConfiguration;
-import org.apache.maven.archiver.MavenArchiver;
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
-import org.apache.maven.execution.MavenSession;
+import org.apache.maven.api.Project;
+import org.apache.maven.api.Session;
 import org.apache.maven.plugins.ear.EarModule;
-import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.archiver.MavenArchiveConfiguration;
+import org.apache.maven.shared.archiver.MavenArchiver;
+import org.apache.maven.shared.archiver.MavenArchiverException;
 import org.codehaus.plexus.archiver.jar.Manifest;
 import org.codehaus.plexus.archiver.jar.ManifestException;
 
@@ -54,23 +54,11 @@ public class EarMavenArchiver extends MavenArchiver {
     }
 
     /**
-     * @param project {@link MavenProject}
-     * @param config {@link MavenArchiveConfiguration}
-     * @return manifest
-     * @throws DependencyResolutionRequiredException in case of an resolution error
-     * @throws ManifestException in case of an error
-     * @deprecated
-     */
-    public Manifest getManifest(MavenProject project, MavenArchiveConfiguration config)
-            throws ManifestException, DependencyResolutionRequiredException {
-        return this.getManifest(null, project, config);
-    }
-
-    /**
      * {@inheritDoc}
      */
-    public Manifest getManifest(MavenSession session, MavenProject project, MavenArchiveConfiguration config)
-            throws ManifestException, DependencyResolutionRequiredException {
+    @Override
+    public Manifest getManifest(Session session, Project project, MavenArchiveConfiguration config)
+            throws MavenArchiverException {
         final Manifest manifest = super.getManifest(session, project, config);
         if (config.getManifest().isAddClasspath()) {
             String earManifestClassPathEntry =
@@ -88,7 +76,11 @@ public class EarMavenArchiver extends MavenArchiver {
                 classPathAttr.setValue(earManifestClassPathEntry);
             } else {
                 final Manifest.Attribute attr = new Manifest.Attribute(CLASS_PATH_KEY, earManifestClassPathEntry);
-                manifest.addConfiguredAttribute(attr);
+                try {
+                    manifest.addConfiguredAttribute(attr);
+                } catch (ManifestException e) {
+                    throw new MavenArchiverException("Unable to add the " + CLASS_PATH_KEY + " manifest entry", e);
+                }
             }
         }
         return manifest;

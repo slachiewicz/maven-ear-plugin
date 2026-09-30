@@ -21,7 +21,6 @@ package org.apache.maven.plugins.ear.util;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugins.ear.AbstractEarTestBase;
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +38,7 @@ class ArtifactRepositoryTest extends AbstractEarTestBase {
 
     @Test
     void testEmptyRepository() {
-        Set<Artifact> artifacts = new HashSet<>();
+        Set<ResolvedArtifact> artifacts = new HashSet<>();
         ArtifactRepository repo = new ArtifactRepository(artifacts, MAIN_ARTIFACT_ID, artifactTypeMappingService);
         assertNull(repo.getUniqueArtifact("ear", "ar", "jar"));
         assertNull(repo.getUniqueArtifact("ear", "ar", "jar", null));

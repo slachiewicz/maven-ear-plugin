@@ -18,7 +18,7 @@
  */
 package org.apache.maven.plugins.ear;
 
-import org.apache.maven.artifact.Artifact;
+import org.apache.maven.plugins.ear.util.ResolvedArtifact;
 import org.codehaus.plexus.util.xml.XMLWriter;
 
 /**
@@ -48,7 +48,7 @@ public class SarModule extends AbstractEarModule implements JbossEarModule {
     /**
      * @param a {@link Artifact}
      */
-    public SarModule(Artifact a) {
+    public SarModule(ResolvedArtifact a) {
         super(a);
         this.libDirectory = DEFAULT_LIB_DIRECTORY;
     }

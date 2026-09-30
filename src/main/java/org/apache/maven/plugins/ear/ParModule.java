@@ -18,7 +18,7 @@
  */
 package org.apache.maven.plugins.ear;
 
-import org.apache.maven.artifact.Artifact;
+import org.apache.maven.plugins.ear.util.ResolvedArtifact;
 
 /**
  * The {@link EarModule} implementation for a Par module.
@@ -41,7 +41,7 @@ public class ParModule extends EjbModule {
     /**
      * @param a {@link Artifact}
      */
-    public ParModule(Artifact a) {
+    public ParModule(ResolvedArtifact a) {
         super(a);
     }
 }

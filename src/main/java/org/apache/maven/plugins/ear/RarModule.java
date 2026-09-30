@@ -18,7 +18,7 @@
  */
 package org.apache.maven.plugins.ear;
 
-import org.apache.maven.artifact.Artifact;
+import org.apache.maven.plugins.ear.util.ResolvedArtifact;
 import org.codehaus.plexus.util.xml.XMLWriter;
 
 /**
@@ -47,7 +47,7 @@ public class RarModule extends AbstractEarModule {
     /**
      * @param a {@link Artifact}
      */
-    public RarModule(Artifact a) {
+    public RarModule(ResolvedArtifact a) {
         super(a);
         this.libDirectory = DEFAULT_LIB_DIRECTORY;
     }

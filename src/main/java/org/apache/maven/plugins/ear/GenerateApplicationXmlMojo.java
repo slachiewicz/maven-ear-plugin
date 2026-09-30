@@ -29,15 +29,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.api.plugin.MojoException;
+import org.apache.maven.api.plugin.annotations.Mojo;
+import org.apache.maven.api.plugin.annotations.Parameter;
+import org.apache.maven.api.xml.XmlNode;
 import org.apache.maven.plugins.ear.util.JavaEEVersion;
-import org.codehaus.plexus.configuration.PlexusConfiguration;
+import org.apache.maven.plugins.ear.util.ResolvedArtifact;
+import org.apache.maven.plugins.ear.util.XmlConfig;
 import org.codehaus.plexus.interpolation.InterpolationException;
 import org.codehaus.plexus.interpolation.Interpolator;
 import org.codehaus.plexus.interpolation.MapBasedValueSource;
@@ -50,11 +48,7 @@ import org.codehaus.plexus.util.FileUtils;
  *
  * @author <a href="snicoll@apache.org">Stephane Nicoll</a>
  */
-@Mojo(
-        name = "generate-application-xml",
-        defaultPhase = LifecyclePhase.GENERATE_RESOURCES,
-        threadSafe = true,
-        requiresDependencyResolution = ResolutionScope.TEST)
+@Mojo(name = "generate-application-xml", defaultPhase = "generate-resources")
 public class GenerateApplicationXmlMojo extends AbstractEarMojo {
 
     /**
@@ -99,7 +93,7 @@ public class GenerateApplicationXmlMojo extends AbstractEarMojo {
     /**
      * Description of the application to be used when the application.xml file is auto-generated.
      */
-    @Parameter(defaultValue = "${project.description}")
+    @Parameter(defaultValue = "${project.model.description}")
     private String description;
 
     /**
@@ -141,25 +135,25 @@ public class GenerateApplicationXmlMojo extends AbstractEarMojo {
      * The security-roles to be added to the auto-generated application.xml file.
      */
     @Parameter
-    private PlexusConfiguration security;
+    private XmlNode security;
 
     /**
      * The env-entries to be added to the auto-generated application.xml file. Since JavaEE6.
      */
     @Parameter(alias = "env-entries")
-    private PlexusConfiguration envEntries;
+    private XmlNode envEntries;
 
     /**
      * The {@code ejb-ref} entries.
      */
     @Parameter(alias = "ejb-refs")
-    private PlexusConfiguration ejbRefs;
+    private XmlNode ejbRefs;
 
     /**
      * The {@code resource-ref} entries.
      */
     @Parameter
-    private PlexusConfiguration resourceRefs;
+    private XmlNode resourceRefs;
 
     /**
      * A file to write the path of every module in the EAR to. It is a properties file whose keys are
@@ -176,7 +170,8 @@ public class GenerateApplicationXmlMojo extends AbstractEarMojo {
     /**
      * {@inheritDoc}
      */
-    public void execute() throws MojoExecutionException, MojoFailureException {
+    @Override
+    public void execute() throws MojoException {
         // Initializes ear modules
         super.execute();
 
@@ -191,7 +186,7 @@ public class GenerateApplicationXmlMojo extends AbstractEarMojo {
             try {
                 generateStandardDeploymentDescriptor(javaEEVersion);
             } catch (EarPluginException e) {
-                throw new MojoExecutionException("Failed to generate application.xml", e);
+                throw new MojoException("Failed to generate application.xml", e);
             }
 
             try {
@@ -199,7 +194,7 @@ public class GenerateApplicationXmlMojo extends AbstractEarMojo {
                         new File(generatedDescriptorLocation, "application.xml"),
                         new File(getWorkDirectory(), "META-INF"));
             } catch (IOException e) {
-                throw new MojoExecutionException("Unable to copy application.xml to final destination", e);
+                throw new MojoException("Unable to copy application.xml to final destination", e);
             }
         }
 
@@ -212,7 +207,7 @@ public class GenerateApplicationXmlMojo extends AbstractEarMojo {
             try {
                 generateJbossDeploymentDescriptor();
             } catch (EarPluginException e) {
-                throw new MojoExecutionException("Failed to generate jboss-app.xml", e);
+                throw new MojoException("Failed to generate jboss-app.xml", e);
             }
 
             try {
@@ -220,7 +215,7 @@ public class GenerateApplicationXmlMojo extends AbstractEarMojo {
                         new File(generatedDescriptorLocation, "jboss-app.xml"),
                         new File(getWorkDirectory(), "META-INF"));
             } catch (IOException e) {
-                throw new MojoExecutionException("Unable to copy jboss-app.xml to final destination", e);
+                throw new MojoException("Unable to copy jboss-app.xml to final destination", e);
             }
         }
 
@@ -232,12 +227,12 @@ public class GenerateApplicationXmlMojo extends AbstractEarMojo {
     /**
      * Writes {@link #moduleMapFile} with sorted lines and no timestamp, so that the file is reproducible.
      *
-     * @throws MojoExecutionException if the file cannot be written
+     * @throws MojoException if the file cannot be written
      */
-    private void writeModuleMap() throws MojoExecutionException {
+    private void writeModuleMap() {
         Properties map = new Properties();
         for (EarModule module : getModules()) {
-            Artifact artifact = module.getArtifact();
+            ResolvedArtifact artifact = module.getArtifact();
             String key = artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getType();
             if (artifact.getClassifier() != null && !artifact.getClassifier().isEmpty()) {
                 key += ":" + artifact.getClassifier();
@@ -260,7 +255,7 @@ public class GenerateApplicationXmlMojo extends AbstractEarMojo {
             }
             Files.write(moduleMapFile.toPath(), lines, StandardCharsets.ISO_8859_1);
         } catch (IOException e) {
-            throw new MojoExecutionException("Unable to write the module map to " + moduleMapFile, e);
+            throw new MojoException("Unable to write the module map to " + moduleMapFile, e);
         }
     }
 
@@ -324,12 +319,13 @@ public class GenerateApplicationXmlMojo extends AbstractEarMojo {
      */
     private List<SecurityRole> buildSecurityRoles() throws EarPluginException {
         final List<SecurityRole> result = new ArrayList<>();
-        if (security == null) {
+        final XmlConfig securityConfig = getConfiguration("security", security);
+        if (securityConfig == null) {
             return result;
         }
-        final PlexusConfiguration[] securityRoles = security.getChildren(SecurityRole.SECURITY_ROLE);
+        final XmlConfig[] securityRoles = securityConfig.getChildren(SecurityRole.SECURITY_ROLE);
 
-        for (PlexusConfiguration securityRole : securityRoles) {
+        for (XmlConfig securityRole : securityRoles) {
             final String id = securityRole.getAttribute(SecurityRole.ID_ATTRIBUTE);
             final String childRoleName =
                     securityRole.getChild(SecurityRole.ROLE_NAME).getValue();
@@ -374,18 +370,19 @@ public class GenerateApplicationXmlMojo extends AbstractEarMojo {
      */
     private List<EnvEntry> buildEnvEntries() throws EarPluginException {
         final List<EnvEntry> result = new ArrayList<>();
-        if (envEntries == null) {
+        final XmlConfig envEntriesConfig = getConfiguration("envEntries", envEntries);
+        if (envEntriesConfig == null) {
             return result;
         }
         try {
             StringSearchInterpolator ssi = new StringSearchInterpolator();
-            ValueSource vs = new MapBasedValueSource(project.getProperties());
+            ValueSource vs = new MapBasedValueSource(project.getModel().getProperties());
             ssi.addValueSource(vs);
 
-            final PlexusConfiguration[] allEnvEntries = envEntries.getChildren(EnvEntry.ENV_ENTRY);
+            final XmlConfig[] allEnvEntries = envEntriesConfig.getChildren(EnvEntry.ENV_ENTRY);
 
             getLog().debug("buildEnvEntries: allEnvEntries size:" + allEnvEntries.length);
-            for (PlexusConfiguration envEntry : allEnvEntries) {
+            for (XmlConfig envEntry : allEnvEntries) {
                 final String childDescription =
                         interpolate(ssi, envEntry.getChild(EnvEntry.DESCRIPTION).getValue());
                 final String childEnvEntryName = interpolate(
@@ -422,17 +419,18 @@ public class GenerateApplicationXmlMojo extends AbstractEarMojo {
      */
     private List<EjbRef> buildEjbEntries() throws EarPluginException {
         final List<EjbRef> result = new ArrayList<>();
-        if (ejbRefs == null) {
+        final XmlConfig ejbRefsConfig = getConfiguration("ejbRefs", ejbRefs);
+        if (ejbRefsConfig == null) {
             return result;
         }
         try {
             StringSearchInterpolator ssi = new StringSearchInterpolator();
-            ValueSource vs = new MapBasedValueSource(project.getProperties());
+            ValueSource vs = new MapBasedValueSource(project.getModel().getProperties());
             ssi.addValueSource(vs);
 
-            final PlexusConfiguration[] allEjbEntries = ejbRefs.getChildren(EjbRef.EJB_REF);
+            final XmlConfig[] allEjbEntries = ejbRefsConfig.getChildren(EjbRef.EJB_REF);
 
-            for (PlexusConfiguration ejbEntry : allEjbEntries) {
+            for (XmlConfig ejbEntry : allEjbEntries) {
                 final String childDescription =
                         interpolate(ssi, ejbEntry.getChild(EnvEntry.DESCRIPTION).getValue());
                 final String childEjbEntryName =
@@ -463,20 +461,21 @@ public class GenerateApplicationXmlMojo extends AbstractEarMojo {
      */
     private List<ResourceRef> buildResourceRefs() throws EarPluginException {
         final List<ResourceRef> result = new ArrayList<>();
-        if (resourceRefs == null) {
+        final XmlConfig resourceRefsConfig = getConfiguration("resourceRefs", resourceRefs);
+        if (resourceRefsConfig == null) {
             return result;
         }
         try {
             getLog().debug("Resources found");
             StringSearchInterpolator ssi = new StringSearchInterpolator();
-            ValueSource vs = new MapBasedValueSource(project.getProperties());
+            ValueSource vs = new MapBasedValueSource(project.getModel().getProperties());
             ssi.addValueSource(vs);
 
             // TODO: Check if this is a good idea hard code that here? Better idea?
-            final PlexusConfiguration[] allResourceRefEntries = resourceRefs.getChildren("resourceRef");
+            final XmlConfig[] allResourceRefEntries = resourceRefsConfig.getChildren("resourceRef");
 
             getLog().debug("allResourceRefEntries length: " + allResourceRefEntries.length);
-            for (PlexusConfiguration resEntry : allResourceRefEntries) {
+            for (XmlConfig resEntry : allResourceRefEntries) {
                 getLog().debug("Resources resEntry:" + resEntry.getName());
 
                 final String childResRefName = interpolate(

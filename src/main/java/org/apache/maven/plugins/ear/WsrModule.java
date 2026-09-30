@@ -18,7 +18,7 @@
  */
 package org.apache.maven.plugins.ear;
 
-import org.apache.maven.artifact.Artifact;
+import org.apache.maven.plugins.ear.util.ResolvedArtifact;
 
 /**
  * The {@link EarModule} implementation for a JBoss wsr module.
@@ -41,7 +41,7 @@ public class WsrModule extends RarModule {
     /**
      * @param a {@link Artifact}
      */
-    public WsrModule(Artifact a) {
+    public WsrModule(ResolvedArtifact a) {
         super(a);
     }
 }

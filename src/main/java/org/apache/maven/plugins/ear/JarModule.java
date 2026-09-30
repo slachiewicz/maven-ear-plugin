@@ -20,8 +20,7 @@ package org.apache.maven.plugins.ear;
 
 import java.util.Set;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.ear.util.ResolvedArtifact;
 import org.codehaus.plexus.util.xml.XMLWriter;
 
 /**
@@ -55,7 +54,7 @@ public class JarModule extends AbstractEarModule {
      * @param defaultLibBundleDir the default library bundle directory
      * @param includeInApplicationXml include the application xml or not
      */
-    public JarModule(Artifact a, String defaultLibBundleDir, Boolean includeInApplicationXml) {
+    public JarModule(ResolvedArtifact a, String defaultLibBundleDir, Boolean includeInApplicationXml) {
         super(a);
         setLibBundleDir(defaultLibBundleDir);
         this.includeInApplicationXml = includeInApplicationXml;
@@ -83,7 +82,7 @@ public class JarModule extends AbstractEarModule {
     /**
      * {@inheritDoc}
      */
-    public void resolveArtifact(Set<Artifact> artifacts) throws EarPluginException, MojoFailureException {
+    public void resolveArtifact(Set<ResolvedArtifact> artifacts) throws EarPluginException {
         // Let's resolve the artifact
         super.resolveArtifact(artifacts);
 
