@@ -18,12 +18,12 @@
  */
 package org.apache.maven.plugins.ear.util;
 
-import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.api.plugin.MojoException;
 
 /**
  * @author Stephane Nicoll
  */
-public class InvalidJavaEEVersion extends MojoExecutionException {
+public class InvalidJavaEEVersion extends MojoException {
 
     private static final long serialVersionUID = 3189028517550801372L;
 

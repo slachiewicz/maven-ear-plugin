@@ -20,8 +20,8 @@ package org.apache.maven.plugins.ear;
 
 import java.util.Set;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.api.plugin.MojoException;
+import org.apache.maven.plugins.ear.util.ResolvedArtifact;
 import org.codehaus.plexus.util.xml.XMLWriter;
 
 /**
@@ -32,14 +32,14 @@ import org.codehaus.plexus.util.xml.XMLWriter;
 public interface EarModule {
 
     /**
-     * Returns the {@link Artifact} representing this module.
+     * Returns the {@link ResolvedArtifact} representing this module.
      *
      * Note that this might return {@code null} till the module has been resolved.
      *
      * @return the artifact
      * @see #resolveArtifact(java.util.Set)
      */
-    Artifact getArtifact();
+    ResolvedArtifact getArtifact();
 
     /**
      * Returns the {@code URI} for this module.
@@ -91,14 +91,14 @@ public interface EarModule {
     void appendModule(XMLWriter writer, String version, Boolean generateId);
 
     /**
-     * Resolves the {@link Artifact} represented by the module. Note that the {@link EarExecutionContext} might be used
+     * Resolves the {@link ResolvedArtifact} represented by the module. Note that the {@link EarExecutionContext} might be used
      * to customize further the resolution.
      *
      * @param artifacts the project's artifacts
      * @throws EarPluginException if the artifact could not be resolved
-     * @throws MojoFailureException if an unexpected error occurred
+     * @throws MojoException if an unexpected error occurred
      */
-    void resolveArtifact(Set<Artifact> artifacts) throws EarPluginException, MojoFailureException;
+    void resolveArtifact(Set<ResolvedArtifact> artifacts) throws EarPluginException;
 
     /**
      * @param earExecutionContext the execution context

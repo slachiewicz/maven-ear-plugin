@@ -20,9 +20,9 @@ package org.apache.maven.plugins.ear;
 
 import java.util.Set;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.api.plugin.MojoException;
 import org.apache.maven.plugins.ear.util.ArtifactRepository;
+import org.apache.maven.plugins.ear.util.ResolvedArtifact;
 import org.apache.maven.shared.mapping.MappingUtils;
 import org.codehaus.plexus.interpolation.InterpolationException;
 import org.codehaus.plexus.util.xml.XMLWriter;
@@ -49,7 +49,7 @@ public abstract class AbstractEarModule implements EarModule {
      */
     protected static final String ALT_DD = "alt-dd";
 
-    private Artifact artifact;
+    private ResolvedArtifact artifact;
 
     // Those are set by the configuration
 
@@ -128,7 +128,7 @@ public abstract class AbstractEarModule implements EarModule {
      *
      * @param a the artifact
      */
-    public AbstractEarModule(Artifact a) {
+    public AbstractEarModule(ResolvedArtifact a) {
         this.artifact = a;
         this.groupId = a.getGroupId();
         this.artifactId = a.getArtifactId();
@@ -147,24 +147,24 @@ public abstract class AbstractEarModule implements EarModule {
     /**
      * {@inheritDoc}
      */
-    public void resolveArtifact(Set<Artifact> artifacts) throws EarPluginException, MojoFailureException {
+    public void resolveArtifact(Set<ResolvedArtifact> artifacts) throws EarPluginException {
         // If the artifact is already set no need to resolve it
         if (artifact == null) {
             // Make sure that at least the groupId and the artifactId are specified
             if (groupId == null || artifactId == null) {
-                throw new MojoFailureException(
+                throw new MojoException(
                         "Could not resolve artifact[" + groupId + ":" + artifactId + ":" + getType() + "]");
             }
             final ArtifactRepository ar = earExecutionContext.getArtifactRepository();
             artifact = ar.getUniqueArtifact(groupId, artifactId, getType(), classifier);
             // Artifact has not been found
             if (artifact == null) {
-                Set<Artifact> candidates = ar.getArtifacts(groupId, artifactId, getType());
+                Set<ResolvedArtifact> candidates = ar.getArtifacts(groupId, artifactId, getType());
                 if (candidates.size() > 1) {
-                    throw new MojoFailureException("Artifact[" + this + "] has " + candidates.size()
+                    throw new MojoException("Artifact[" + this + "] has " + candidates.size()
                             + " candidates, please provide a classifier.");
                 } else {
-                    throw new MojoFailureException("Artifact[" + this + "] is not a dependency of the project.");
+                    throw new MojoException("Artifact[" + this + "] is not a dependency of the project.");
                 }
             }
         }
@@ -173,7 +173,7 @@ public abstract class AbstractEarModule implements EarModule {
     /**
      * @return {@link #artifact}
      */
-    public Artifact getArtifact() {
+    public ResolvedArtifact getArtifact() {
         return artifact;
     }
 
@@ -264,7 +264,7 @@ public abstract class AbstractEarModule implements EarModule {
         if (bundleFileName == null) {
             try {
                 String outputFileNameMapping = earExecutionContext.getOutputFileNameMapping();
-                bundleFileName = MappingUtils.evaluateFileNameMapping(outputFileNameMapping, artifact);
+                bundleFileName = MappingUtils.evaluateFileNameMapping(outputFileNameMapping, artifact.getDependency());
             } catch (InterpolationException e) {
                 // We currently ignore this here, cause assumption is that
                 // has already been happened before..
@@ -333,7 +333,7 @@ public abstract class AbstractEarModule implements EarModule {
             // No module id was specified but one should be generated.
             // FIXME: Should we use the mapping using outputFileNameMapping instead
             // of doing this on our own?
-            Artifact theArtifact = getArtifact();
+            ResolvedArtifact theArtifact = getArtifact();
             String generatedId = theArtifact.getType().toUpperCase() + "_" + theArtifact.getGroupId() + "."
                     + theArtifact.getArtifactId();
             if (null != theArtifact.getClassifier()

@@ -18,7 +18,7 @@
  */
 package org.apache.maven.plugins.ear;
 
-import org.apache.maven.artifact.Artifact;
+import org.apache.maven.plugins.ear.util.ResolvedArtifact;
 
 /**
  * The {@link EarModule} implementation for an ejb client module.
@@ -42,7 +42,7 @@ public class EjbClientModule extends JarModule {
      * @param a {@link Artifact}
      * @param defaultLibBundleDir the default lib bundle directory
      */
-    public EjbClientModule(Artifact a, String defaultLibBundleDir) {
+    public EjbClientModule(ResolvedArtifact a, String defaultLibBundleDir) {
         super(a, defaultLibBundleDir, Boolean.FALSE);
     }
 }

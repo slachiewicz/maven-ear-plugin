@@ -18,7 +18,7 @@
  */
 package org.apache.maven.plugins.ear;
 
-import org.apache.maven.artifact.Artifact;
+import org.apache.maven.plugins.ear.util.ResolvedArtifact;
 import org.codehaus.plexus.util.xml.XMLWriter;
 
 /**
@@ -45,7 +45,7 @@ public class HarModule extends AbstractEarModule implements JbossEarModule {
     /**
      * @param a {@link Artifact}
      */
-    public HarModule(Artifact a) {
+    public HarModule(ResolvedArtifact a) {
         super(a);
         this.libDirectory = DEFAULT_LIB_DIRECTORY;
     }

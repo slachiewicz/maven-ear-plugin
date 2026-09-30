@@ -22,12 +22,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugins.ear.util.ArtifactTypeMappingService;
 import org.apache.maven.plugins.ear.util.JavaEEVersion;
+import org.apache.maven.plugins.ear.util.ResolvedArtifact;
 
 /**
- * Builds an {@link EarModule} based on an {@code Artifact}.
+ * Builds an {@link EarModule} based on a {@link ResolvedArtifact}.
  *
  * @author <a href="snicoll@apache.org">Stephane Nicoll</a>
  */
@@ -57,7 +57,7 @@ public final class EarModuleFactory {
             JBOSS_HAR_ARTIFACT_TYPE));
 
     /**
-     * Creates a new {@link EarModule} based on the specified {@link Artifact} and the specified execution
+     * Creates a new {@link EarModule} based on the specified {@link ResolvedArtifact} and the specified execution
      * configuration.
      *
      * @param artifact the artifact
@@ -70,7 +70,7 @@ public final class EarModuleFactory {
      * @throws UnknownArtifactTypeException if the artifact is not handled
      */
     public static EarModule newEarModule(
-            Artifact artifact,
+            ResolvedArtifact artifact,
             JavaEEVersion javaEEVersion,
             String defaultLibBundleDir,
             Boolean includeInApplicationXml,
