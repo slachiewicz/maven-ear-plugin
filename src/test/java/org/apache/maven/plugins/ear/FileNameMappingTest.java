@@ -18,9 +18,8 @@
  */
 package org.apache.maven.plugins.ear;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.DefaultArtifact;
-import org.apache.maven.artifact.handler.DefaultArtifactHandler;
+import org.apache.maven.api.Artifact;
+import org.apache.maven.plugins.ear.stub.DependencyStub;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,29 +33,20 @@ class FileNameMappingTest {
 
     @Test
     void completeMapping() throws Exception {
-        Artifact jar = new DefaultArtifact(
-                "org.apache.sample",
-                "maven-test-lib",
-                "1.0",
-                "compile",
-                "jar",
-                null,
-                new DefaultArtifactHandler("jar"));
+        Artifact jar = new DependencyStub("org.apache.sample", "maven-test-lib", "1.0", null, "jar", null);
         assertEquals(
                 "maven-test-lib-1.0.jar", FileNameMapping.evaluate("@{artifactId}@-@{version}@.@{extension}@", jar));
     }
 
     @Test
     void noVersionMapping() throws Exception {
-        Artifact jar = new DefaultArtifact(
-                "org.apache.sample", "maven-test-lib", "1.0", null, "jar", null, new DefaultArtifactHandler("jar"));
+        Artifact jar = new DependencyStub("org.apache.sample", "maven-test-lib", "1.0", null, "jar", null);
         assertEquals("maven-test-lib.jar", FileNameMapping.evaluate("@{artifactId}@.@{extension}@", jar));
     }
 
     @Test
     void mappingWithGroupId() throws Exception {
-        Artifact jar = new DefaultArtifact(
-                "org.apache.sample", "maven-test-lib", "1.0", null, "jar", null, new DefaultArtifactHandler("jar"));
+        Artifact jar = new DependencyStub("org.apache.sample", "maven-test-lib", "1.0", null, "jar", null);
         assertEquals(
                 "org.apache.sample-maven-test-lib-1.0.jar",
                 FileNameMapping.evaluate("@{groupId}@-@{artifactId}@-@{version}@.@{extension}@", jar));
@@ -64,21 +54,13 @@ class FileNameMappingTest {
 
     @Test
     void mappingWithClassifier() throws Exception {
-        Artifact jar = new DefaultArtifact(
-                "org.apache.sample",
-                "maven-test-lib",
-                "1.0",
-                null,
-                "jar",
-                "classifier",
-                new DefaultArtifactHandler("jar"));
+        Artifact jar = new DependencyStub("org.apache.sample", "maven-test-lib", "1.0", "classifier", "jar", null);
         assertEquals("maven-test-lib-1.0-classifier.jar", FileNameMapping.evaluate(DEFAULT_MAPPING, jar));
     }
 
     @Test
     void mappingWithNullClassifier() throws Exception {
-        Artifact jar = new DefaultArtifact(
-                "org.apache.sample", "maven-test-lib", "1.0", null, "jar", null, new DefaultArtifactHandler("jar"));
+        Artifact jar = new DependencyStub("org.apache.sample", "maven-test-lib", "1.0", null, "jar", null);
         assertEquals("maven-test-lib-1.0.jar", FileNameMapping.evaluate(DEFAULT_MAPPING, jar));
     }
 
@@ -88,15 +70,13 @@ class FileNameMappingTest {
      */
     @Test
     void mappingWithNullClassifierShouldNotHaveTrailingDash() throws Exception {
-        Artifact jar = new DefaultArtifact(
-                "org.apache.sample", "maven-test-lib", "1.0", null, "jar", null, new DefaultArtifactHandler("jar"));
+        Artifact jar = new DependencyStub("org.apache.sample", "maven-test-lib", "1.0", null, "jar", null);
         assertEquals("maven-test-lib-1.0.jar", FileNameMapping.evaluate(DEFAULT_MAPPING, jar));
     }
 
     @Test
     void mappingWithEmptyClassifierShouldNotHaveTrailingDash() throws Exception {
-        Artifact jar = new DefaultArtifact(
-                "org.apache.sample", "maven-test-lib", "1.0", null, "jar", "", new DefaultArtifactHandler("jar"));
+        Artifact jar = new DependencyStub("org.apache.sample", "maven-test-lib", "1.0", "", "jar", null);
         assertEquals("maven-test-lib-1.0.jar", FileNameMapping.evaluate(DEFAULT_MAPPING, jar));
     }
 
@@ -108,19 +88,11 @@ class FileNameMappingTest {
         final String mappingWithOptionalClassifier1 = "@{artifactId}@-@{version}@@{dashClassifier}@.@{extension}@";
         final String mappingWithOptionalClassifier2 = "@{artifactId}@-@{version}@@{dashClassifier?}@.@{extension}@";
 
-        Artifact jar = new DefaultArtifact(
-                "org.apache.sample", "maven-test-lib", "1.0", null, "jar", null, new DefaultArtifactHandler("jar"));
+        Artifact jar = new DependencyStub("org.apache.sample", "maven-test-lib", "1.0", null, "jar", null);
         assertEquals("maven-test-lib-1.0.jar", FileNameMapping.evaluate(mappingWithOptionalClassifier1, jar));
         assertEquals("maven-test-lib-1.0.jar", FileNameMapping.evaluate(mappingWithOptionalClassifier2, jar));
 
-        jar = new DefaultArtifact(
-                "org.apache.sample",
-                "maven-test-lib",
-                "1.0",
-                null,
-                "jar",
-                "classifier",
-                new DefaultArtifactHandler("jar"));
+        jar = new DependencyStub("org.apache.sample", "maven-test-lib", "1.0", "classifier", "jar", null);
         assertEquals(
                 "maven-test-lib-1.0-classifier.jar", FileNameMapping.evaluate(mappingWithOptionalClassifier1, jar));
         assertEquals(
@@ -129,8 +101,7 @@ class FileNameMappingTest {
 
     @Test
     void emptyClassifierWithOptionalDashClassifier() throws Exception {
-        Artifact jar = new DefaultArtifact(
-                "org.apache.sample", "maven-test-lib", "1.0", null, "jar", "", new DefaultArtifactHandler("jar"));
+        Artifact jar = new DependencyStub("org.apache.sample", "maven-test-lib", "1.0", "", "jar", null);
         assertEquals(
                 "maven-test-lib-1.0.jar",
                 FileNameMapping.evaluate("@{artifactId}@-@{version}@@{dashClassifier?}@.@{extension}@", jar));
@@ -138,21 +109,13 @@ class FileNameMappingTest {
 
     @Test
     void blankClassifierWithOptionalDashClassifier() throws Exception {
-        Artifact jar = new DefaultArtifact(
-                "org.apache.sample", "maven-test-lib", "1.0", null, "jar", " ", new DefaultArtifactHandler("jar"));
+        Artifact jar = new DependencyStub("org.apache.sample", "maven-test-lib", "1.0", " ", "jar", null);
         assertEquals("maven-test-lib-1.0.jar", FileNameMapping.evaluate(DEFAULT_MAPPING, jar));
     }
 
     @Test
     void classifierIsTrimmedInDashClassifier() throws Exception {
-        Artifact jar = new DefaultArtifact(
-                "org.apache.sample",
-                "maven-test-lib",
-                "1.0",
-                null,
-                "jar",
-                " tests ",
-                new DefaultArtifactHandler("jar"));
+        Artifact jar = new DependencyStub("org.apache.sample", "maven-test-lib", "1.0", " tests ", "jar", null);
         assertEquals("maven-test-lib-1.0-tests.jar", FileNameMapping.evaluate(DEFAULT_MAPPING, jar));
     }
 }

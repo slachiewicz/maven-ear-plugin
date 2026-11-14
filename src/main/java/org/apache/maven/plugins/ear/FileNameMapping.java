@@ -20,7 +20,7 @@ package org.apache.maven.plugins.ear;
 
 import java.util.Properties;
 
-import org.apache.maven.artifact.Artifact;
+import org.apache.maven.api.Artifact;
 import org.codehaus.plexus.interpolation.InterpolationException;
 import org.codehaus.plexus.interpolation.ObjectBasedValueSource;
 import org.codehaus.plexus.interpolation.PropertiesBasedValueSource;
@@ -28,7 +28,7 @@ import org.codehaus.plexus.interpolation.RegexBasedInterpolator;
 
 /**
  * Evaluates file name mapping expressions such as {@code @{artifactId}@-@{version}@@{dashClassifier?}@.@{extension}@}
- * against an {@link Artifact}. Any getter of the artifact or of its artifact handler can be used as a token, plus
+ * against an {@link Artifact}. Any getter of the artifact can be used as a token, plus
  * {@code dashClassifier} and {@code dashClassifier?}, which expand to {@code -<classifier>} or, for a blank classifier, to nothing.
  */
 final class FileNameMapping {
@@ -48,7 +48,6 @@ final class FileNameMapping {
     static String evaluate(String expression, Artifact artifact) throws InterpolationException {
         RegexBasedInterpolator interpolator = new RegexBasedInterpolator("\\@\\{(", ")?([^}]+)\\}@");
         interpolator.addValueSource(new ObjectBasedValueSource(artifact));
-        interpolator.addValueSource(new ObjectBasedValueSource(artifact.getArtifactHandler()));
 
         // Support for special expressions, like @{dashClassifier?}@, see MWAR-212
         interpolator.addValueSource(dashClassifierValueSource(artifact.getClassifier()));
